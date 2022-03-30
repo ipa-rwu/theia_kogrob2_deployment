@@ -1,0 +1,2 @@
+include 'de.fraunhofer.ipa.deployment'
+include 'de.fraunhofer.ipa.deployment.ide'
