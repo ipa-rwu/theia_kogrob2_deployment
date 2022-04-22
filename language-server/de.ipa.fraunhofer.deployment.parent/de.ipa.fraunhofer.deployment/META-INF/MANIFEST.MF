@@ -1,0 +1,30 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: de.ipa.fraunhofer.deployment
+Bundle-ManifestVersion: 2
+Bundle-Name: de.ipa.fraunhofer.deployment
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: de.ipa.fraunhofer.deployment; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.5.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.14.0",
+ org.eclipse.xtext.util,
+ org.eclipse.emf.common,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Export-Package: de.ipa.fraunhofer.deployment.serializer,
+ de.ipa.fraunhofer.deployment.services,
+ de.ipa.fraunhofer.deployment.yaml,
+ de.ipa.fraunhofer.deployment.scoping,
+ de.ipa.fraunhofer.deployment.yaml.impl,
+ de.ipa.fraunhofer.deployment.generator,
+ de.ipa.fraunhofer.deployment,
+ de.ipa.fraunhofer.deployment.validation,
+ de.ipa.fraunhofer.deployment.yaml.util,
+ de.ipa.fraunhofer.deployment.parser.antlr,
+ de.ipa.fraunhofer.deployment.parser.antlr.internal,
+ de.ipa.fraunhofer.deployment.parser.antlr.lexer
+Import-Package: org.apache.log4j

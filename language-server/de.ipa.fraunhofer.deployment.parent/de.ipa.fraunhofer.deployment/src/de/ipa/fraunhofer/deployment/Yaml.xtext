@@ -1,0 +1,239 @@
+grammar de.ipa.fraunhofer.deployment.Yaml with org.eclipse.xtext.common.Terminals
+
+generate yaml "http://www.ipa.de/fraunhofer/deployment/Yaml"
+
+import 'http://www.eclipse.org/emf/2002/Ecore' as ecore
+
+Yaml: {Yaml}
+	(content+=YamlContent)*
+;
+
+YamlContent:
+	rootContent=(Groups|Repository)
+;
+
+Groups:
+	name='Groups'':'
+	INDENT
+		(groups+=GroupInstance)+
+	DEDENT
+;
+
+GroupInstance:
+	name=GROUPID ':'
+	INDENT
+		(stages+=(Stages)*)		
+	DEDENT
+;
+
+Stages:
+	CommonStage|BuildStage
+;
+
+CommonStage:
+	name='common' ':'
+	INDENT
+		(specSections+=(CommonSpecSection)*)		
+	DEDENT
+;
+
+CommonSpecSection:
+	StartCommands|SpecImage
+;
+
+BuildStage:
+	name='stage.build' ':'
+	INDENT
+		(specSections+=(BuildSpecSection)*)		
+	DEDENT
+;
+
+BuildSpecSection:
+	PackageType|Dependencies
+;
+
+Dependencies: 
+	name = 'dependOn'':'
+	INDENT
+		(dependencies+=ListDependency)+
+	DEDENT
+;
+
+ListDependency:
+	PreListElement groupDependencies=[GroupInstance|GROUPID]
+;
+
+StartCommands: 
+	name = 'startCommands'':'
+	INDENT
+		(startCommands+=ListStartCommands)+
+	DEDENT
+;
+
+ListStartCommands:
+	PreListElement ESTRING
+;
+
+SpecImage:
+	name='images'':'
+	INDENT
+		children+=(ImageType)+
+	DEDENT
+;
+
+ImageType:
+	DockerImageType
+;
+
+DockerImageType:
+	name=Docker':'
+	INDENT
+		version=ImageVersion
+	DEDENT
+;
+
+ImageVersion:
+	name='imageVersion:' 
+	INDENT
+		versions+=(ImageVersionInstance)+
+	DEDENT
+;
+
+ImageVersionInstance:
+	PreListElement ID|'branch'
+;
+
+WorkspacePackageMembers:
+	name='members'':'
+	INDENT
+		pkgs+=(PackageMemberInstance)+
+	DEDENT
+;
+
+UnReleasePackageMembers:
+	name='unreleasedDependencies'':'
+	INDENT
+		pkgs+=(PackageMemberInstance)+
+	DEDENT
+;
+
+PackageMemberInstance:
+	PreListElement 'name:' name=ID
+	INDENT
+	    'path:' path=(URL|LOCALPATH)
+	DEDENT
+;
+
+SpecAptRepositories:
+	name='aptRepositories'':'	
+	INDENT
+		children+=(AptRepositoryInstance)+
+	DEDENT
+;
+
+AptRepositoryInstance:
+	PreListElement 'name:' name=ESTRING
+	INDENT
+	    'key:' key=URL
+	    'repositoryPath:' repositoryPath=URL
+	    ('updateRosDep:' updateRosDep=URL)?
+	DEDENT
+;
+
+PackageType:
+	RosPackageType
+;
+
+RosPackageType:
+	name='pkg.ros'':'
+	INDENT
+		(children+=(SpecRosPackage)+)
+	DEDENT
+;
+
+SpecRosPackage:
+	rosVersion=RosDistro ':'
+	INDENT
+		(spec+=(SpecRosPackageInstance)+)
+	DEDENT
+;
+
+SpecRosPackageInstance:
+	WorkspacePackageMembers|SpecAptRepositories|UnReleasePackageMembers
+;
+
+Repository:
+	name='repositories' ':'
+	INDENT
+		(spec+=(SpecRepository)+)
+	DEDENT
+;
+
+SpecRepository:
+	PreListElement 'name:' name=ID
+	INDENT
+	    'path:' path=(DOCKERREPO)
+	    'imageTypes:' imageTypes=RepoImageTypes
+	DEDENT
+;
+
+RepoImageTypes:
+	'[' (children+=(ImageTypes)) (',' children+=(ImageTypes)*)? ']'
+;
+
+PreListElement hidden(SL_COMMENT):
+	'-';
+
+enum RosDistro:
+	melodic='melodic'|noetic='noetic'|foxy='foxy'|galactic="galactic"
+;
+
+enum ImageTypes:
+	DockerImage
+;
+enum Docker returns ImageTypes:
+	DockerImage='docker'
+;
+
+terminal INDENT: 'synthetic:INDENT';
+terminal DEDENT: 'synthetic:DEDENT';
+// group.name
+terminal GROUPID: ('g''r''o''u''p''.')
+	('a'..'z'|'A'..'Z'|'0'..'9')*
+;
+
+terminal SL_COMMENT: '#' !('\n'|'\r')*;
+
+terminal ID: ('a'..'z'|'A'..'Z'|'_'|'/'|'-'|'='|'?'|'!'|'('|')'|'.') 
+	('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'/'|'-'|'='|'?'|'!'|'('|')'|'.')*
+;
+
+terminal DOCKERREPO:
+	(
+		'"'('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-')*':'
+		('0'..'9')*'"'
+		
+	)|
+	ID
+;
+terminal LOCALPATH:
+	 (
+	 	'"'(('/')|('./')|('../'))
+	 	('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'-')*
+	 	'"'
+	 )
+;
+
+terminal URL:
+	(
+		(
+			(('http'('s')?'://')|('git@'))
+			('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'\\'|'/'|'='|'?'|'!'|'('|')'|'.'|'-'|':')*
+		)|'localhost'
+	)
+;
+
+terminal ESTRING returns ecore::EString:
+	STRING | ID
+;
+
